@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClothesScan — Tu talla exacta, siempre</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+  /* ── VARIABLES MODO OSCURO (POR DEFECTO) ── */
+  :root {
+    --bg-dark: #070709;
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --border: rgba(255, 255, 255, 0.08);
+    --coral: #FF5F4B;
+    --coral-glow: rgba(255, 95, 75, 0.4);
+    --text-main: #FFFFFF;
+    --text-muted: #9CA3AF;
+    --success: #2ecc71;
+    --overlay-light: rgba(255, 255, 255, 0.05);
+    --nav-bg: rgba(7, 7, 9, 0.75);
+    --theme-switch-bg: rgba(255, 255, 255, 0.1);
+  }
+
+  /* ── VARIABLES MODO CLARO ── */
+  [data-theme="light"] {
+    --bg-dark: #FAFAF8;
+    --bg-card: #FFFFFF;
+    --border: rgba(0, 0, 0, 0.1);
+    --coral: #FF5F4B;
+    --coral-glow: rgba(255, 95, 75, 0.3);
+    --text-main: #141414;
+    --text-muted: #6B7280;
+    --success: #27ae60;
+    --overlay-light: rgba(0, 0, 0, 0.04);
+    --nav-bg: rgba(250, 250, 248, 0.85);
+    --theme-switch-bg: rgba(0, 0, 0, 0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    overflow-x: hidden;
+    line-height: 1.6;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  h1, h2, .section-title { font-family: 'Playfair Display', serif; }
+
+  /* ── ANIMACIONES JS ── */
+  .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
+  .reveal.active { opacity: 1; transform: translateY(0); }
+  .delay-1 { transition-delay: 0.1s; }
+  .delay-2 { transition-delay: 0.2s; }
+  .delay-3 { transition-delay: 0.3s; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+    padding: 20px 5vw; background: var(--nav-bg);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.4s ease, border-color 0.4s ease;
+  }
+  .logo { font-size: 1.3rem; font-weight: 700; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 8px;}
+  .logo span { color: var(--coral); }
+  
+  .nav-center { display: flex; align-items: center; gap: 40px; }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a { font-size: 0.9rem; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color .2s; }
+  .nav-links a:hover { color: var(--text-main); }
+
+  .nav-actions { display: flex; align-items: center; gap: 20px; }
+  .nav-btn { background: var(--coral); color: #fff; padding: 10px 24px; border-radius: 30px; text-decoration: none; font-size: 0.9rem; font-weight: 600; box-shadow: 0 0 15px var(--coral-glow); transition: 0.3s;}
+  .nav-btn:hover { transform: scale(1.05); }
+
+  /* ── NUEVO INTERRUPTOR DE TEMA (SWITCH) ── */
+  .theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  .theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+  }
+  /* Ocultamos el checkbox real porque es feo */
+  .theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  /* Dibujamos la píldora base */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--theme-switch-bg);
+    transition: .4s;
+    border-radius: 30px;
+    border: 1px solid var(--border);
+  }
+  /* Dibujamos el círculo deslizante */
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-main);
+    transition: .4s cubic-bezier(0.25, 1, 0.5, 1);
+    border-radius: 50%;
+  }
+  /* Cuando el usuario lo activa (Modo Claro) */
+  input:checked + .slider {
+    background-color: var(--coral);
+    border-color: var(--coral);
+  }
+  input:checked + .slider:before {
+    transform: translateX(22px);
+    background-color: #ffffff; /* El círculo siempre será blanco en este estado */
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh; padding: 140px 5vw 80px;
+    background: radial-gradient(ellipse 70% 70% at 70% 50%, rgba(255,95,75,0.08) 0%, transparent 70%);
+  }
+  .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; max-width: 1200px; margin: 0 auto; }
+  
+  .hero-tag {
+    background: rgba(255,95,75,0.1); border: 1px solid var(--coral); color: var(--coral);
+    padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px;
+    margin-bottom: 24px; display: inline-block; text-transform: uppercase;
+  }
+  .hero h1 { font-size: clamp(2.8rem, 5vw, 4.2rem); line-height: 1.1; margin-bottom: 24px; font-weight: 700; letter-spacing: -1px; }
+  .hero h1 em { font-style: italic; color: var(--coral); }
+  .hero p { font-size: 1.05rem; color: var(--text-muted); max-width: 500px; margin-bottom: 40px; }
+  
+  .hero-stats { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--border); }
+  .stat-num { font-size: 2rem; font-weight: 700; color: var(--text-main); }
+  .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+  /* ── ESCÁNER VISUAL ── */
+  .hero-visual { position: relative; display: flex; justify-content: center; align-items: center; height: 520px; }
+  .scan-wrapper { position: relative; width: 260px; height: 440px; }
+  .body-silhouette {
+    width: 100%; height: 100%;
+    background-color: var(--overlay-light);
+    background-image: linear-gradient(rgba(255, 95, 75, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 95, 75, 0.15) 1px, transparent 1px);
+    background-size: 20px 20px; background-position: center;
+    border-radius: 100px 100px 20px 20px / 120px 120px 30px 30px;
+    border: 1px dashed var(--border); position: relative; overflow: hidden;
+    box-shadow: inset 0 0 50px rgba(255, 95, 75, 0.05);
+  }
+  .body-silhouette::before {
+    content: ''; position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+    width: 80px; height: 90px; border-radius: 40px 40px 50px 50px;
+    background: var(--overlay-light); border: 1px dashed var(--border);
+  }
+  .body-silhouette::after { content: ''; position: absolute; top: 0; left: 50%; bottom: 0; width: 1px; background: var(--border); transform: translateX(-50%); }
+  .scan-line {
+    position: absolute; left: -20px; right: -20px; height: 3px; background: linear-gradient(90deg, transparent, var(--coral), var(--coral), transparent);
+    box-shadow: 0 0 16px 4px rgba(255,95,75,0.5); animation: scanMove 2.8s ease-in-out infinite; top: 0; z-index: 5;
+  }
+  @keyframes scanMove { 0% { top: 5%; opacity: 0; } 10%, 90% { opacity: 1; } 100% { top: 95%; opacity: 0; } }
+  .measure-tag {
+    position: absolute; display: flex; align-items: center; gap: 6px; background: var(--nav-bg); border: 1px solid var(--border); backdrop-filter: blur(8px);
+    border-radius: 100px; padding: 6px 12px; font-size: 0.72rem; font-weight: 600; color: var(--text-main); box-shadow: 0 4px 16px rgba(0,0,0,0.1); white-space: nowrap; opacity: 0; animation: tagAppear 0.5s ease forwards; z-index: 10;
+  }
+  .measure-tag::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--coral); }
+  .tag-1 { left: -110px; top: 22%; animation-delay: 0.8s; }
+  .tag-2 { right: -120px; top: 42%; animation-delay: 1.4s; }
+  .tag-3 { left: -100px; top: 64%; animation-delay: 2.0s; }
+  .tag-4 { right: -110px; top: 80%; animation-delay: 2.6s; }
+  @keyframes tagAppear { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* ── CÓMO FUNCIONA ── */
+  .section { padding: 100px 5vw; max-width: 1200px; margin: 0 auto; }
+  .section-title { text-align: center; font-size: 2.8rem; margin-bottom: 60px; color: var(--text-main); }
+  
+  .timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; position: relative; }
+  @media (min-width: 900px) {
+    .timeline::before { content: ''; position: absolute; top: 80px; left: 10%; right: 10%; height: 2px; background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent); z-index: 0; }
+  }
+  .timeline-step { background: var(--bg-card); border: 1px solid var(--border); padding: 40px 30px; border-radius: 24px; text-align: center; position: relative; overflow: hidden; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); z-index: 1; }
+  .timeline:hover .timeline-step:not(:hover) { opacity: 0.3; transform: scale(0.95); filter: blur(2px); }
+  .timeline-step:hover { border-color: var(--coral); transform: translateY(-15px) scale(1.05); box-shadow: 0 20px 40px rgba(0,0,0,0.1), 0 0 30px rgba(255,95,75,0.15); z-index: 2; }
+  .step-number { font-size: 4rem; font-weight: 700; font-family: 'Playfair Display', serif; color: var(--overlay-light); position: absolute; top: -10px; right: 10px; line-height: 1; transition: color 0.3s;}
+  .timeline-step:hover .step-number { color: rgba(255,95,75,0.1); }
+  .step-icon { font-size: 2.5rem; margin-bottom: 20px; transition: transform 0.3s;}
+  .timeline-step:hover .step-icon { transform: scale(1.2); }
+  .timeline-step h3 { font-size: 1.2rem; margin-bottom: 12px; font-weight: 600;}
+  .timeline-step p { color: var(--text-muted); font-size: 0.95rem; }
+
+  /* ── ACORDEÓN VERTICAL ── */
+  .accordion-container { display: flex; flex-direction: column; gap: 16px; height: 620px; width: 100%; max-width: 900px; margin: 0 auto; }
+  .accordion-panel {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px;
+    flex: 1; display: flex; flex-direction: column; justify-content: flex-start;
+    padding: 20px 24px; overflow: hidden; cursor: pointer; transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1), background 0.4s ease, border-color 0.4s ease;
+  }
+  .accordion-panel.active { flex: 2.5; background: linear-gradient(135deg, rgba(255,95,75,0.05) 0%, rgba(255,95,75,0.1) 100%); border-color: var(--coral); box-shadow: inset 0 0 0 1px var(--coral-glow); }
+  .accordion-container:hover .accordion-panel.active { flex: 1; background: var(--bg-card); border-color: var(--border); box-shadow: none; }
+  .accordion-container .accordion-panel:hover { flex: 2.5; background: linear-gradient(135deg, rgba(255,95,75,0.05) 0%, rgba(255,95,75,0.1) 100%); border-color: var(--coral); box-shadow: inset 0 0 0 1px var(--coral-glow); }
+  .panel-header { display: flex; align-items: center; gap: 20px; }
+  .panel-icon { font-size: 1.8rem; width: 50px; height: 50px; border-radius: 14px; background: var(--overlay-light); display: flex; align-items: center; justify-content: center; transition: transform 0.4s ease, background 0.4s ease; flex-shrink: 0; }
+  .accordion-panel.active .panel-icon, .accordion-panel:hover .panel-icon { transform: scale(1.1); background: rgba(255,95,75,0.2); }
+  .panel-title { font-size: 1.3rem; font-weight: 700; color: var(--text-main); font-family: 'Playfair Display', serif; margin: 0; }
+  .panel-body { margin-top: 15px; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; pointer-events: none; }
+  .accordion-panel.active .panel-body { opacity: 1; transform: translateY(0); transition-delay: 0.2s; pointer-events: auto; }
+  .accordion-container:hover .accordion-panel.active .panel-body { opacity: 0; transform: translateY(10px); transition-delay: 0s; pointer-events: none; }
+  .accordion-container .accordion-panel:hover .panel-body { opacity: 1; transform: translateY(0); transition-delay: 0.2s; pointer-events: auto; }
+  .panel-desc { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── SIMULADOR DE TALLAS ── */
+  .simulator-container {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 32px;
+    padding: 60px; max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1); transition: background-color 0.4s ease, border-color 0.4s ease;
+  }
+  .sim-info h3 { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin-bottom: 16px; }
+  .sim-info p { color: var(--text-muted); margin-bottom: 24px; }
+  
+  .calc-form { display: flex; flex-direction: column; gap: 20px; }
+  .input-group { display: flex; flex-direction: column; gap: 8px; }
+  .input-group > label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
+  .calc-input {
+    background: var(--overlay-light); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 20px; color: var(--text-main); font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem; outline: none; transition: 0.3s;
+  }
+  .calc-input:focus { border-color: var(--coral); box-shadow: 0 0 15px rgba(255,95,75,0.1); }
+  
+  .fit-toggle {
+    display: flex; background: var(--overlay-light); border: 1px solid var(--border);
+    border-radius: 12px; padding: 6px; gap: 6px;
+  }
+  .fit-toggle input[type="radio"] { display: none; }
+  .fit-toggle label {
+    flex: 1; text-align: center; padding: 12px 0; font-size: 0.9rem; font-weight: 600;
+    color: var(--text-muted); cursor: pointer; border-radius: 8px; transition: all 0.3s ease;
+    text-transform: none; letter-spacing: normal; margin: 0;
+  }
+  .fit-toggle label:hover { background: var(--border); color: var(--text-main); }
+  .fit-toggle input[type="radio"]:checked + label {
+    background: var(--coral); color: #fff; box-shadow: 0 4px 15px rgba(255,95,75,0.3);
+  }
+
+  .calc-btn {
+    background: var(--text-main); color: var(--bg-dark); border: none; padding: 16px;
+    border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-top: 10px;
+  }
+  .calc-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+  
+  #calc-result { transition: all 0.3s; }
+
+  /* ── ECOSISTEMA Y BUSCADOR ── */
+  .brands-section { padding: 80px 0; overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--overlay-light); }
+  .brands-title { text-align: center; margin-bottom: 30px; color: var(--text-muted); font-weight: 500; font-size: 1.1rem; letter-spacing: 1px;}
+  
+  .search-container { max-width: 500px; margin: 0 auto 40px; position: relative; padding: 0 5vw; }
+  #brand-search {
+    width: 100%; padding: 16px 24px 16px 50px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 100px; color: var(--text-main); font-family: 'Space Grotesk', sans-serif; font-size: 1rem; outline: none; transition: 0.3s;
+  }
+  #brand-search:focus { border-color: var(--coral); box-shadow: 0 0 20px rgba(255,95,75,0.2); }
+  #brand-search::placeholder { color: #6b7280; }
+  .search-icon { position: absolute; left: calc(5vw + 20px); top: 50%; transform: translateY(-50%); font-size: 1.2rem; opacity: 0.6; }
+
+  .search-results { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 800px; margin: 0 auto 40px; padding: 0 5vw; }
+  .search-results.hidden { display: none; }
+  .result-pill { background: rgba(46, 204, 113, 0.1); border: 1px solid var(--success); color: var(--success); padding: 10px 20px; border-radius: 100px; font-weight: 600; display: flex; align-items: center; gap: 8px; animation: popIn 0.3s ease forwards; }
+  .result-not-found { color: var(--text-muted); font-size: 0.95rem; text-align: center; animation: popIn 0.3s ease forwards; background: var(--bg-card); padding: 16px 24px; border-radius: 16px; border: 1px dashed var(--border); }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+  #brands-marquee { transition: opacity 0.3s; }
+  .marquee-wrapper { display: flex; width: 200%; margin-bottom: 30px; }
+  .marquee-content { display: flex; justify-content: space-around; width: 50%; animation: scrollX 20s linear infinite; }
+  .marquee-content.reverse { animation: scrollXRev 25s linear infinite; }
+  .brand-pill { background: var(--bg-card); border: 1px solid var(--border); padding: 15px 35px; border-radius: 100px; font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 10px; white-space: nowrap; transition: background 0.4s ease, border-color 0.4s ease;}
+  .brand-pill.local { color: var(--coral); }
+  @keyframes scrollX { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+  @keyframes scrollXRev { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+  /* ── CTA FINAL ── */
+  .cta-section { padding: 120px 5vw; display: flex; justify-content: center; }
+  .cta-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 32px; padding: 60px; max-width: 1000px; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 60px; box-shadow: 0 20px 50px rgba(0,0,0,0.1), inset 0 0 0 1px var(--overlay-light); position: relative; overflow: hidden; }
+  .cta-card::before { content: ''; position: absolute; top: -50%; right: -20%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,95,75,0.15) 0%, transparent 70%); border-radius: 50%; z-index: 0; }
+  .cta-content { flex: 1; position: relative; z-index: 1; }
+  .cta-content h2 { font-size: 3rem; margin-bottom: 16px; line-height: 1.1; font-family: 'Playfair Display', serif;}
+  .cta-content p { color: var(--text-muted); margin-bottom: 32px; font-size: 1.1rem; max-width: 400px; }
+  .app-buttons { display: flex; gap: 16px; flex-wrap: wrap; }
+  .app-btn { display: flex; align-items: center; gap: 12px; background: var(--text-main); color: var(--bg-dark); padding: 12px 24px; border-radius: 14px; text-decoration: none; font-weight: 700; transition: 0.3s; border: 1px solid transparent;}
+  [data-theme="light"] .app-btn { border-color: rgba(0,0,0,0.1); }
+  .app-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+  .app-btn i { font-size: 1.6rem; font-style: normal; }
+  .app-btn div { text-align: left; line-height: 1.2; }
+  .app-btn small { font-size: 0.7rem; font-weight: 500; }
+
+  .cta-visual { position: relative; z-index: 1; flex-shrink: 0; }
+  .qr-mockup { width: 200px; height: 200px; border-radius: 20px; background: var(--overlay-light); position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+  .qr-corners { position: absolute; width: 30px; height: 30px; border-color: var(--coral); border-style: solid; }
+  .qr-corners.tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-top-left-radius: 16px; }
+  .qr-corners.tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-top-right-radius: 16px; }
+  .qr-corners.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-bottom-left-radius: 16px; }
+  .qr-corners.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-bottom-right-radius: 16px; }
+  .qr-icon { font-size: 4rem; opacity: 0.8; filter: drop-shadow(0 0 10px var(--coral-glow)); }
+  .scan-line-qr { position: absolute; left: 10px; right: 10px; height: 2px; background: var(--coral); box-shadow: 0 0 15px 3px var(--coral-glow); animation: qrScan 2s ease-in-out infinite; }
+  @keyframes qrScan { 0% { top: 10%; opacity: 0; } 10%, 90% { opacity: 1; } 100% { top: 90%; opacity: 0; } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; text-align: center; }
+    .hero p { margin: 0 auto 40px; }
+    .hero-stats { justify-content: center; }
+    .nav-center { display: none; } /* Ocultar enlaces pero mantener botón switch */
+    .hero-visual { height: 400px; margin-top: 40px; }
+    .accordion-container { height: 680px; }
+    .panel-icon { width: 45px; height: 45px; font-size: 1.5rem; }
+    .panel-title { font-size: 1.15rem; }
+    .panel-desc { font-size: 0.85rem; }
+    
+    .simulator-container { grid-template-columns: 1fr; padding: 40px 30px; gap: 40px; text-align: center; }
+    @media (max-width: 400px) { .fit-toggle { flex-direction: column; } }
+
+    .cta-card { flex-direction: column; text-align: center; padding: 40px 30px; gap: 40px;}
+    .cta-content p { margin: 0 auto 32px; }
+    .app-buttons { justify-content: center; }
+    .cta-card::before { top: 0; right: 0; left: 0; margin: 0 auto; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scan-line, .scan-line-qr { animation: none; }
+    .measure-tag { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="logo">Clothes<span>Scan</span></a>
+    
+    <div class="nav-center">
+      <ul class="nav-links">
+        <li><a href="#como-funciona">Proceso</a></li>
+        <li><a href="#funcionalidades">Tecnología</a></li>
+        <li><a href="#simulador">Demo</a></li>
+        <li><a href="#ecosistema">Ecosistema</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-actions">
+      <div class="theme-switch-wrapper" title="Alternar Modo Claro/Oscuro">
+        <label class="theme-switch" for="theme-toggle">
+          <input type="checkbox" id="theme-toggle">
+          <div class="slider"></div>
+        </label>
+      </div>
+      <a href="#descargar" class="nav-btn">Descargar App</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="inicio">
+    <div class="hero-grid">
+      <div class="reveal">
+        <div class="hero-tag">Inteligencia Artificial AR</div>
+        <h1>Compra ropa que <br><em>realmente</em> te queda bien</h1>
+        <p>Escanea tu cuerpo en 3 segundos con la cámara de tu teléfono. Descubre qué tiendas online tienen tu talla exacta disponible en tiempo real.</p>
+        
+        <div class="hero-stats">
+          <div><div class="stat-num">98%</div><div class="stat-label">Precisión de medidas</div></div>
+          <div><div class="stat-num">500+</div><div class="stat-label">Tiendas integradas</div></div>
+          <div><div class="stat-num">3s</div><div class="stat-label">Tiempo de escaneo</div></div>
+        </div>
+      </div>
+      
+      <div class="hero-visual reveal delay-2">
+        <div class="scan-wrapper">
+          <div class="body-silhouette"></div>
+          <div class="scan-line"></div>
+          <div class="measure-tag tag-1">Hombros · 44 cm</div>
+          <div class="measure-tag tag-2">Pecho · 96 cm</div>
+          <div class="measure-tag tag-3">Cintura · 78 cm</div>
+          <div class="measure-tag tag-4">Cadera · 100 cm</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section" id="como-funciona">
+    <h2 class="section-title reveal">El proceso en 3 pasos</h2>
+    <div class="timeline">
+      <div class="timeline-step reveal delay-1">
+        <div class="step-number">01</div>
+        <div class="step-icon">📱</div>
+        <h3>Escanea tu cuerpo</h3>
+        <p>Apunta la cámara hacia ti. Nuestra IA calcula más de 15 medidas corporales con precisión milimétrica sin usar cinta.</p>
+      </div>
+      <div class="timeline-step reveal delay-2">
+        <div class="step-number">02</div>
+        <div class="step-icon">🧠</div>
+        <h3>Genera tu perfil</h3>
+        <p>Traducimos tus medidas a formatos universales (S/M/L, EU, US, IT) listos para conectar con cualquier tienda.</p>
+      </div>
+      <div class="timeline-step reveal delay-3">
+        <div class="step-number">03</div>
+        <div class="step-icon">🛍️</div>
+        <h3>Descubre stock</h3>
+        <p>Te mostramos el stock disponible en tu talla exacta en tiempo real. Cero adivinanzas, cero sorpresas.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="funcionalidades">
+    <h2 class="section-title reveal">Tecnología para tu armario</h2>
+    <div class="accordion-container reveal delay-1">
+      <div class="accordion-panel active">
+        <div class="panel-header"><div class="panel-icon">👁️</div><h3 class="panel-title">Prueba Virtual AR</h3></div>
+        <div class="panel-body"><p class="panel-desc">Visualiza cómo te quedará la prenda en tu cuerpo real antes de añadirla al carrito. La experiencia de un probador físico, directamente en tu pantalla.</p></div>
+      </div>
+      <div class="accordion-panel">
+        <div class="panel-header"><div class="panel-icon">☁️</div><h3 class="panel-title">Perfil en la Nube</h3></div>
+        <div class="panel-body"><p class="panel-desc">Tus medidas se guardan de forma segura y se actualizan automáticamente en cada escaneo para usarlas en cualquier momento.</p></div>
+      </div>
+      <div class="accordion-panel">
+        <div class="panel-header"><div class="panel-icon">🔔</div><h3 class="panel-title">Alertas de Stock</h3></div>
+        <div class="panel-body"><p class="panel-desc">¿No hay tu talla exacta? Activa la alerta inteligente y te notificaremos al instante en cuanto esté disponible exclusivamente para tu perfil.</p></div>
+      </div>
+      <div class="accordion-panel">
+        <div class="panel-header"><div class="panel-icon">🌍</div><h3 class="panel-title">Red Conectada</h3></div>
+        <div class="panel-body"><p class="panel-desc">Conectamos con más de 500 tiendas en Europa y América. Cada prenda es calibrada silenciosamente para asegurar que cuadre con tu perfil único.</p></div>
+      </div>
+      <div class="accordion-panel">
+        <div class="panel-header"><div class="panel-icon">↩️</div><h3 class="panel-title">Menos Huella</h3></div>
+        <div class="panel-body"><p class="panel-desc">El 38% de las devoluciones online son por talla. Al comprar con certeza, ahorras tiempo, dinero y reduces drásticamente las emisiones de carbono.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="simulador">
+    <div class="simulator-container reveal">
+      <div class="sim-info">
+        <div class="hero-tag" style="margin-bottom: 15px; border-color: rgba(255,255,255,0.2); color: var(--text-main);">Demo en vivo</div>
+        <h3>Descubre por qué necesitas ClothesScan</h3>
+        <p>Ingresa tus datos básicos y nuestro algoritmo te mostrará cómo las tallas "universales" te mienten dependiendo de la tienda en la que compres.</p>
+        
+        <div id="calc-result"></div>
+      </div>
+      
+      <div class="sim-form-wrapper">
+        <form id="size-calculator-form" class="calc-form">
+          <div class="input-group">
+            <label for="calc-height">Tu Altura (cm)</label>
+            <input type="number" id="calc-height" class="calc-input" placeholder="Ej. 175" required min="100" max="250">
+          </div>
+          <div class="input-group">
+            <label for="calc-weight">Tu Peso (kg)</label>
+            <input type="number" id="calc-weight" class="calc-input" placeholder="Ej. 70" required min="30" max="200">
+          </div>
+          
+          <div class="input-group">
+            <label>Preferencia de ajuste</label>
+            <div class="fit-toggle">
+              <input type="radio" id="fit-ajustado" name="calc-fit" value="ajustado">
+              <label for="fit-ajustado">Ajustado</label>
+              
+              <input type="radio" id="fit-normal" name="calc-fit" value="normal" checked>
+              <label for="fit-normal">Normal</label>
+              
+              <input type="radio" id="fit-holgado" name="calc-fit" value="holgado">
+              <label for="fit-holgado">Holgado</label>
+            </div>
+          </div>
+
+          <button type="submit" class="calc-btn">Simular mi perfil de tallas</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="brands-section" id="ecosistema">
+    <div class="brands-title reveal">Ecosistema Integrado. +500 tiendas y creciendo.</div>
+    <div class="search-container reveal">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="brand-search" placeholder="Busca tu tienda favorita (ej. Zara, Nike...)">
+    </div>
+    <div id="search-results" class="search-results hidden"></div>
+
+    <div id="brands-marquee">
+      <div class="marquee-wrapper">
+        <div class="marquee-content">
+          <div class="brand-pill">ZARA</div><div class="brand-pill">H&M</div><div class="brand-pill">Mango</div><div class="brand-pill">ASOS</div><div class="brand-pill">Zalando</div><div class="brand-pill">Nike</div><div class="brand-pill">Adidas</div>
+        </div>
+        <div class="marquee-content">
+          <div class="brand-pill">ZARA</div><div class="brand-pill">H&M</div><div class="brand-pill">Mango</div><div class="brand-pill">ASOS</div><div class="brand-pill">Zalando</div><div class="brand-pill">Nike</div><div class="brand-pill">Adidas</div>
+        </div>
+      </div>
+      <div class="marquee-wrapper" style="margin-bottom: 0;">
+        <div class="marquee-content reverse">
+          <div class="brand-pill local">🇧🇴 Papingo</div><div class="brand-pill local">🇧🇴 Maminga</div><div class="brand-pill local">🇧🇴 Bentracks</div><div class="brand-pill local">🇧🇴 Lors</div><div class="brand-pill local">🇧🇴 Mitsuba</div>
+        </div>
+        <div class="marquee-content reverse">
+          <div class="brand-pill local">🇧🇴 Papingo</div><div class="brand-pill local">🇧🇴 Maminga</div><div class="brand-pill local">🇧🇴 Bentracks</div><div class="brand-pill local">🇧🇴 Lors</div><div class="brand-pill local">🇧🇴 Mitsuba</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" id="descargar">
+    <div class="cta-card reveal">
+      <div class="cta-content">
+        <div class="hero-tag" style="margin-bottom: 15px;">Únete a la revolución</div>
+        <h2>Lleva tu probador<br>en el bolsillo</h2>
+        <p>Descarga ClothesScan gratis hoy. Tu primer escaneo toma solo 3 segundos y cambiará tu forma de comprar para siempre.</p>
+        <div class="app-buttons">
+          <a href="#" class="app-btn"><i>🍎</i><div><small>Descargar en</small><br>App Store</div></a>
+          <a href="#" class="app-btn"><i>▶</i><div><small>Disponible en</small><br>Google Play</div></a>
+        </div>
+      </div>
+      <div class="cta-visual">
+        <div class="qr-mockup">
+          <div class="qr-corners tl"></div><div class="qr-corners tr"></div><div class="qr-corners bl"></div><div class="qr-corners br"></div>
+          <div class="qr-icon">📱</div><div class="scan-line-qr"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      
+      // 0. LÓGICA MODO CLARO / OSCURO (ACTUALIZADO A SWITCH)
+      const themeToggleCheckbox = document.getElementById('theme-toggle');
+      const savedTheme = localStorage.getItem('theme');
+      
+      // Revisamos si el usuario ya guardó su preferencia antes
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        // Si la preferencia era "light" (claro), activamos visualmente el switch
+        if (savedTheme === 'light') {
+          themeToggleCheckbox.checked = true;
+        }
+      }
+
+      // Detectamos cuando el usuario "mueve" el interruptor
+      themeToggleCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          // Si el switch se activa -> Modo Claro
+          document.documentElement.setAttribute('data-theme', 'light');
+          localStorage.setItem('theme', 'light');
+        } else {
+          // Si el switch se desactiva -> Modo Oscuro (Por defecto)
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('theme', 'dark');
+        }
+      });
+
+      // 1. Intersection Observer
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) { entry.target.classList.add("active"); }
+        });
+      }, { threshold: 0.1 });
+      const revealElements = document.querySelectorAll(".reveal");
+      revealElements.forEach((el) => observer.observe(el));
+
+      // 2. Buscador Dinámico de Marcas
+      const brandsDB = [
+        "ZARA", "H&M", "Mango", "ASOS", "Zalando", "Nike", "Adidas", 
+        "Papingo", "Maminga", "Bentracks", "Lors", "Mitsuba", 
+        "Pull&Bear", "Bershka", "Massimo Dutti", "Stradivarius", 
+        "Oysho", "Shein", "Fashion Nova", "Puma", "Reebok", 
+        "Vans", "Converse", "Levi's", "Gucci", "Balenciaga", "Uniqlo"
+      ];
+      const searchInput = document.getElementById('brand-search');
+      const searchResults = document.getElementById('search-results');
+      const marquee = document.getElementById('brands-marquee');
+
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (query.length === 0) {
+          searchResults.classList.add('hidden'); marquee.style.display = 'block'; searchResults.innerHTML = ''; return;
+        }
+        marquee.style.display = 'none'; searchResults.classList.remove('hidden');
+        const filteredBrands = brandsDB.filter(brand => brand.toLowerCase().includes(query));
+        if (filteredBrands.length > 0) {
+          searchResults.innerHTML = filteredBrands.map(brand => `<div class="result-pill">✅ ${brand} integrada</div>`).join('');
+        } else {
+          searchResults.innerHTML = `<div class="result-not-found">No encontramos <strong>"${e.target.value}"</strong> en nuestra base actual.<br><span style="color: var(--coral);">¡Pero agregamos tiendas nuevas en menos de 72h!</span></div>`;
+        }
+      });
+
+      // 3. Simulador de Tallas
+      const calcForm = document.getElementById('size-calculator-form');
+      const calcResult = document.getElementById('calc-result');
+      const randomStores = ["ZARA", "H&M", "Mango", "ASOS", "Nike", "Adidas", "Pull&Bear", "Papingo", "Mitsuba"];
+      const sizeScale = ["XS", "S", "M", "L", "XL", "XXL"];
+
+      calcForm.addEventListener('submit', (e) => {
+        e.preventDefault(); 
+        
+        const height = parseInt(document.getElementById('calc-height').value);
+        const weight = parseInt(document.getElementById('calc-weight').value);
+        const fit = document.querySelector('input[name="calc-fit"]:checked').value;
+
+        let baseSize = "M"; 
+        if (height > 180 || weight > 85) baseSize = "L";
+        if (height > 190 || weight > 100) baseSize = "XL";
+        if (height < 165 || weight < 60) baseSize = "S";
+        if (height < 155 || weight < 50) baseSize = "XS";
+
+        let baseIndex = sizeScale.indexOf(baseSize);
+
+        if (fit === "holgado" && baseIndex < sizeScale.length - 1) baseIndex++;
+        if (fit === "ajustado" && baseIndex > 0) baseIndex--;
+
+        const shuffledStores = randomStores.sort(() => 0.5 - Math.random());
+        const store1Name = shuffledStores[0];
+        const store2Name = shuffledStores[1];
+
+        let store1Size = sizeScale[baseIndex];
+
+        let diff = Math.random() > 0.5 ? 1 : -1; 
+        if (baseIndex === 0) diff = 1;
+        if (baseIndex === sizeScale.length - 1) diff = -1;
+        
+        let store2Size = sizeScale[baseIndex + diff];
+
+        calcResult.innerHTML = `
+          <div style="background: rgba(46, 204, 113, 0.05); border: 1px solid var(--success); padding: 20px; border-radius: 16px; margin-top: 24px; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
+            <h4 style="color: var(--success); font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 10px;">¡Análisis completado!</h4>
+            <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 15px;">Sin un escaneo preciso, aquí es donde comenzarían los problemas para ti:</p>
+            
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+              <div style="flex: 1; background: var(--overlay-light); border-radius: 12px; padding: 15px; text-align: center; border: 1px solid var(--border);">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">En ${store1Name} serías</div>
+                <div style="font-size: 2rem; font-weight: 700; color: var(--text-main); line-height: 1.2;">${store1Size}</div>
+              </div>
+              <div style="flex: 1; background: var(--overlay-light); border-radius: 12px; padding: 15px; text-align: center; border: 1px solid var(--border);">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">En ${store2Name} serías</div>
+                <div style="font-size: 2rem; font-weight: 700; color: var(--coral); line-height: 1.2;">${store2Size}</div>
+              </div>
+            </div>
+            
+            <p style="font-size: 0.8rem; color: var(--text-muted);">*Con ClothesScan, nuestra IA detecta tu talla exacta para cada tienda automáticamente.</p>
+          </div>
+        `;
+      });
+    });
+  </script>
+
+</body>
+</html>
