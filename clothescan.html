@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClothesScan — Tu talla exacta, en cada tienda</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:    #141414;
+    --bg:     #FAFAF8;
+    --deep:   #1A2B4A;
+    --coral:  #FF5F4B;
+    --sand:   #E8DDD0;
+    --mid:    #6B7280;
+    --white:  #FFFFFF;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 6vw;
+    background: rgba(250,250,248,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .nav-logo {
+    font-size: 1.15rem; font-weight: 700; letter-spacing: -0.5px; color: var(--ink);
+    display: flex; align-items: center; gap: 8px; text-decoration: none;
+  }
+  .nav-logo span { color: var(--coral); }
+  .nav-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--coral);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.5; transform:scale(1.4); }
+  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a { font-size: 0.875rem; font-weight: 500; color: var(--mid); text-decoration: none; transition: color .2s; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta {
+    background: var(--coral); color: var(--white);
+    padding: 10px 22px; border-radius: 100px; font-size: 0.875rem; font-weight: 600;
+    text-decoration: none; transition: transform .2s, box-shadow .2s;
+  }
+  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,95,75,0.35); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh; display: flex; align-items: center;
+    padding: 120px 6vw 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse 70% 70% at 70% 50%, rgba(26,43,74,0.06) 0%, transparent 70%);
+  }
+  .hero-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 60px; align-items: center;
+    position: relative; z-index: 1; width: 100%; max-width: 1200px; margin: 0 auto;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--coral); margin-bottom: 20px;
+  }
+  .hero-eyebrow::before {
+    content: ''; display: block; width: 24px; height: 2px; background: var(--coral);
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.6rem, 5vw, 4.2rem);
+    line-height: 1.1; letter-spacing: -1px; color: var(--ink);
+    margin-bottom: 24px;
+  }
+  h1 em { font-style: italic; color: var(--coral); }
+  .hero-desc {
+    font-size: 1.05rem; line-height: 1.7; color: var(--mid);
+    max-width: 460px; margin-bottom: 40px;
+  }
+  .hero-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--coral); color: var(--white);
+    padding: 16px 32px; border-radius: 100px; font-size: 1rem; font-weight: 600;
+    text-decoration: none; transition: transform .2s, box-shadow .2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255,95,75,0.4); }
+  .btn-ghost {
+    color: var(--ink); font-size: 0.9rem; font-weight: 500;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-ghost:hover { color: var(--coral); }
+  .hero-stats {
+    display: flex; gap: 32px; margin-top: 48px;
+    padding-top: 32px; border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--ink); }
+  .stat-label { font-size: 0.78rem; color: var(--mid); margin-top: 2px; }
+
+  /* ── SCAN VISUAL ── */
+  .hero-visual {
+    position: relative; display: flex; justify-content: center; align-items: center;
+    height: 520px;
+  }
+  .scan-wrapper {
+    position: relative; width: 260px; height: 440px;
+  }
+  .body-silhouette {
+    width: 100%; height: 100%;
+    background: linear-gradient(180deg, var(--sand) 0%, rgba(232,221,208,0.4) 100%);
+    border-radius: 130px 130px 80px 80px / 130px 130px 60px 60px;
+    position: relative; overflow: hidden;
+  }
+  .body-silhouette::before {
+    content: '';
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    width: 90px; height: 90px; border-radius: 50%;
+    background: var(--sand);
+  }
+  .scan-line {
+    position: absolute; left: -20px; right: -20px; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--coral), var(--coral), transparent);
+    box-shadow: 0 0 16px 4px rgba(255,95,75,0.5);
+    animation: scanMove 2.8s ease-in-out infinite;
+    top: 0;
+  }
+  @keyframes scanMove {
+    0%   { top: 5%; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { top: 95%; opacity: 0; }
+  }
+  .measure-tag {
+    position: absolute; display: flex; align-items: center; gap: 6px;
+    background: var(--white); border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 100px; padding: 6px 12px;
+    font-size: 0.72rem; font-weight: 600; color: var(--ink);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    white-space: nowrap;
+    opacity: 0; animation: tagAppear 0.5s ease forwards;
+  }
+  .measure-tag::before {
+    content: ''; display: block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--coral);
+  }
+  .tag-1 { left: -110px; top: 22%; animation-delay: 0.8s; }
+  .tag-2 { right: -120px; top: 42%; animation-delay: 1.4s; }
+  .tag-3 { left: -100px; top: 64%; animation-delay: 2.0s; }
+  .tag-4 { right: -110px; top: 80%; animation-delay: 2.6s; }
+  @keyframes tagAppear {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .scan-corner {
+    position: absolute; width: 20px; height: 20px; border-color: var(--coral); border-style: solid;
+  }
+  .scan-corner.tl { top: -8px; left: -8px; border-width: 3px 0 0 3px; }
+  .scan-corner.tr { top: -8px; right: -8px; border-width: 3px 3px 0 0; }
+  .scan-corner.bl { bottom: -8px; left: -8px; border-width: 0 0 3px 3px; }
+  .scan-corner.br { bottom: -8px; right: -8px; border-width: 0 3px 3px 0; }
+
+  /* ── SECTION SHARED ── */
+  section { padding: 100px 6vw; }
+  .section-inner { max-width: 1200px; margin: 0 auto; }
+  .section-tag {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--coral); margin-bottom: 14px;
+  }
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 20px;
+  }
+  .sub { font-size: 1.05rem; line-height: 1.7; color: var(--mid); max-width: 560px; }
+
+  /* ── HOW IT WORKS ── */
+  .how { background: var(--deep); color: var(--white); }
+  .how h2 { color: var(--white); }
+  .how .sub { color: rgba(255,255,255,0.6); }
+  .steps {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;
+    margin-top: 60px;
+  }
+  .step {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 36px 30px;
+    transition: background .3s, transform .3s;
+  }
+  .step:hover { background: rgba(255,255,255,0.08); transform: translateY(-4px); }
+  .step-num {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 2px;
+    color: var(--coral); margin-bottom: 20px; opacity: 0.9;
+  }
+  .step-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: rgba(255,95,75,0.15); display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 20px;
+  }
+  .step h3 { font-size: 1.1rem; font-weight: 600; color: var(--white); margin-bottom: 10px; }
+  .step p { font-size: 0.9rem; line-height: 1.65; color: rgba(255,255,255,0.55); }
+
+  /* ── FEATURES ── */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+    margin-top: 60px;
+  }
+  .feature-card {
+    background: var(--white); border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 20px; padding: 36px;
+    transition: box-shadow .3s, transform .3s;
+  }
+  .feature-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.08); transform: translateY(-3px); }
+  .feature-card.accent { background: var(--coral); color: var(--white); grid-column: span 2; }
+  .feature-card.accent h3 { color: var(--white); }
+  .feature-card.accent p { color: rgba(255,255,255,0.8); }
+  .feature-icon { font-size: 2rem; margin-bottom: 16px; }
+  .feature-card h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 10px; }
+  .feature-card p { font-size: 0.9rem; line-height: 1.65; color: var(--mid); }
+  .feature-card.accent p { color: rgba(255,255,255,0.8); }
+  .feature-accent-inner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
+  }
+  .feature-accent-stat { font-size: 4rem; font-weight: 700; color: var(--white); line-height: 1; }
+  .feature-accent-stat span { font-size: 1.2rem; }
+
+  /* ── TIENDAS ── */
+  .stores { background: var(--sand); }
+  .store-logos {
+    display: flex; gap: 20px; flex-wrap: wrap; margin-top: 48px; align-items: center;
+  }
+  .store-badge {
+    background: var(--white); border-radius: 14px; padding: 14px 24px;
+    font-size: 0.85rem; font-weight: 600; color: var(--ink);
+    border: 1px solid rgba(0,0,0,0.06);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .store-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); }
+  .stores-note { font-size: 0.8rem; color: var(--mid); margin-top: 16px; }
+
+  /* ── TESTIMONIALS ── */
+  .testimonials-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    margin-top: 60px;
+  }
+  .testimonial {
+    background: var(--white); border-radius: 20px; padding: 32px;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .testimonial-stars { color: var(--coral); font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 16px; }
+  .testimonial-text { font-size: 0.95rem; line-height: 1.7; color: var(--ink); margin-bottom: 20px; }
+  .testimonial-author { display: flex; align-items: center; gap: 12px; }
+  .author-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--sand); display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+  .author-name { font-size: 0.85rem; font-weight: 600; }
+  .author-role { font-size: 0.75rem; color: var(--mid); }
+
+  /* ── CTA ── */
+  .cta-section {
+    background: var(--ink); text-align: center; padding: 120px 6vw;
+  }
+  .cta-section h2 { color: var(--white); margin-bottom: 16px; }
+  .cta-section .sub { color: rgba(255,255,255,0.55); margin: 0 auto 48px; text-align: center; }
+  .app-badges { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .app-badge {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px; padding: 14px 24px;
+    display: flex; align-items: center; gap: 12px;
+    color: var(--white); text-decoration: none;
+    transition: background .2s, transform .2s;
+  }
+  .app-badge:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+  .app-badge-icon { font-size: 1.6rem; }
+  .app-badge-text { text-align: left; }
+  .app-badge-sub { font-size: 0.68rem; opacity: 0.6; }
+  .app-badge-name { font-size: 0.95rem; font-weight: 600; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 40px 6vw; border-top: 1px solid rgba(0,0,0,0.06);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: gap;
+  }
+  .footer-logo { font-weight: 700; font-size: 0.95rem; }
+  .footer-logo span { color: var(--coral); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { font-size: 0.8rem; color: var(--mid); text-decoration: none; }
+  .footer-links a:hover { color: var(--ink); }
+  .footer-legal { font-size: 0.75rem; color: var(--mid); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+    .hero-visual { height: 360px; }
+    .scan-wrapper { width: 200px; height: 340px; }
+    .tag-1, .tag-2, .tag-3, .tag-4 { display: none; }
+    .steps { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr; }
+    .feature-card.accent { grid-column: span 1; }
+    .feature-accent-inner { grid-template-columns: 1fr; }
+    .testimonials-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .hero-stats { gap: 20px; flex-wrap: wrap; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+    .footer-links { flex-wrap: wrap; justify-content: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scan-line, .nav-dot { animation: none; }
+    .measure-tag { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-dot"></div>
+    Clothe<span>Scan</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#como-funciona">Cómo funciona</a></li>
+    <li><a href="#funcionalidades">Funcionalidades</a></li>
+    <li><a href="#tiendas">Tiendas</a></li>
+    <li><a href="#opiniones">Opiniones</a></li>
+  </ul>
+  <a href="#descargar" class="nav-cta">Descargar gratis</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <div class="hero-bg"></div>
+  <div class="hero-grid">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Tu escáner de tallas personal</div>
+      <h1>Compra ropa que <em>realmente</em> te queda bien</h1>
+      <p class="hero-desc">
+        ClothesScan escanea tu cuerpo en segundos con la cámara de tu teléfono y encuentra, en tiempo real, las tiendas online que tienen exactamente tu talla disponible.
+      </p>
+      <div class="hero-actions">
+        <a href="#descargar" class="btn-primary">
+          Escanear ahora →
+        </a>
+        <a href="#como-funciona" class="btn-ghost">
+          Ver cómo funciona
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num">98%</div>
+          <div class="stat-label">Precisión de medidas</div>
+        </div>
+        <div>
+          <div class="stat-num">500+</div>
+          <div class="stat-label">Tiendas integradas</div>
+        </div>
+        <div>
+          <div class="stat-num">3s</div>
+          <div class="stat-label">Tiempo de escaneo</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="scan-wrapper">
+        <div class="body-silhouette"></div>
+        <div class="scan-line"></div>
+        <div class="scan-corner tl"></div>
+        <div class="scan-corner tr"></div>
+        <div class="scan-corner bl"></div>
+        <div class="scan-corner br"></div>
+        <div class="measure-tag tag-1">Hombros · 44 cm</div>
+        <div class="measure-tag tag-2">Pecho · 96 cm</div>
+        <div class="measure-tag tag-3">Cintura · 78 cm</div>
+        <div class="measure-tag tag-4">Cadera · 100 cm</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section class="how" id="como-funciona">
+  <div class="section-inner">
+    <div class="section-tag" style="color: rgba(255,95,75,0.9);">Proceso</div>
+    <h2>Tres pasos, talla perfecta</h2>
+    <p class="sub">Sin cinta métrica, sin adivinar. Solo tu teléfono y 3 segundos.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">PASO 01</div>
+        <div class="step-icon">📱</div>
+        <h3>Escanea tu cuerpo</h3>
+        <p>Apunta la cámara hacia ti. Nuestra IA analiza tu silueta y calcula más de 15 medidas corporales con precisión milimétrica.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">PASO 02</div>
+        <div class="step-icon">🧠</div>
+        <h3>Generamos tu perfil</h3>
+        <p>Construimos tu perfil de tallas personalizado, compatible con los sistemas de medición de cada tienda: S/M/L, EU, US, IT y más.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">PASO 03</div>
+        <div class="step-icon">🛍️</div>
+        <h3>Descubre tiendas a tu medida</h3>
+        <p>Te mostramos qué tiendas online tienen stock disponible en tu talla exacta ahora mismo. Sin sorpresas al probarte la ropa.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FUNCIONALIDADES -->
+<section id="funcionalidades">
+  <div class="section-inner">
+    <div class="section-tag">Funcionalidades</div>
+    <h2>Todo lo que necesitas para comprar sin dudas</h2>
+    <p class="sub">Una experiencia de ecommerce diseñada para que la ropa te quede bien desde el primer día.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📐</div>
+        <h3>Perfil de medidas en la nube</h3>
+        <p>Tus medidas se guardan de forma segura y se actualizan automáticamente cada vez que escaneas. Nunca más tendrás que buscarlas.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>Alertas de stock por talla</h3>
+        <p>¿Esa prenda que te gustó no tenía tu talla? Activa la alerta y te avisamos en cuanto esté disponible en tu medida exacta.</p>
+      </div>
+      <div class="feature-card accent">
+        <div class="feature-accent-inner">
+          <div>
+            <div class="feature-icon">🌍</div>
+            <h3>Red global de tiendas</h3>
+            <p>Conectamos con más de 500 tiendas online en Europa y América. Desde grandes marcas hasta boutiques independientes, todas calibradas con tu perfil.</p>
+          </div>
+          <div style="text-align:center;">
+            <div class="feature-accent-stat">500<span>+</span></div>
+            <div style="font-size:0.9rem; opacity:0.7; margin-top:6px;">tiendas conectadas</div>
+          </div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">↩️</div>
+        <h3>Reduce devoluciones a 0</h3>
+        <p>El 38% de las devoluciones online son por talla incorrecta. Con ClothesScan, compras con confianza y ahorras tiempo y dinero.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👁️</div>
+        <h3>Prueba virtual AR</h3>
+        <p>Visualiza cómo te quedará la prenda en tu cuerpo real antes de añadirla al carrito, con realidad aumentada.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIENDAS -->
+<section class="stores" id="tiendas">
+  <div class="section-inner">
+    <div class="section-tag">Ecosistema</div>
+    <h2>Integrado con tus tiendas favoritas</h2>
+    <p class="sub">Seguimos incorporando nuevas marcas cada semana para que nunca te falte donde comprar a tu talla.</p>
+    <div style="font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--coral);margin-bottom:12px;">🇧🇴 Marcas bolivianas</div>
+    <div class="store-logos" style="margin-top:0; margin-bottom:28px;">
+      <div class="store-badge"><span class="dot"></span>Papingo</div>
+      <div class="store-badge"><span class="dot"></span>Maminga</div>
+      <div class="store-badge"><span class="dot"></span>Bentracks</div>
+      <div class="store-badge"><span class="dot"></span>Lors</div>
+      <div class="store-badge"><span class="dot"></span>Mitsuba</div>
+    </div>
+    <div style="font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:12px;">🌍 Marcas internacionales</div>
+    <div class="store-logos" style="margin-top:0;">
+      <div class="store-badge"><span class="dot"></span>ZARA</div>
+      <div class="store-badge"><span class="dot"></span>H&M</div>
+      <div class="store-badge"><span class="dot"></span>Mango</div>
+      <div class="store-badge"><span class="dot"></span>ASOS</div>
+      <div class="store-badge"><span class="dot"></span>Zalando</div>
+      <div class="store-badge"><span class="dot"></span>Nike</div>
+      <div class="store-badge"><span class="dot"></span>Adidas</div>
+      <div class="store-badge"><span class="dot"></span>+480 más</div>
+    </div>
+    <p class="stores-note">¿Tu tienda favorita no está aquí? Escríbenos y la añadimos en menos de 72h.</p>
+  </div>
+</section>
+
+<!-- OPINIONES -->
+<section id="opiniones">
+  <div class="section-inner">
+    <div class="section-tag">Opiniones</div>
+    <h2>Lo que dicen nuestros usuarios</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Llevaba años comprando una M cuando en realidad necesito una S en Mango y una L en Zara. ClothesScan me lo explicó en 5 segundos."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">👩</div>
+          <div>
+            <div class="author-name">Laura M.</div>
+            <div class="author-role">Madrid · Clienta desde 2024</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Mis devoluciones bajaron de 4-5 al mes a cero. Ahora compro con tranquilidad y me llega todo bien a la primera."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">👨</div>
+          <div>
+            <div class="author-name">Carlos R.</div>
+            <div class="author-role">Barcelona · Usuario premium</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Increíble que algo tan sencillo resuelva algo tan frustrante. La prueba virtual AR es un antes y un después en el ecommerce."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">👩‍💼</div>
+          <div>
+            <div class="author-name">Ana S.</div>
+            <div class="author-role">Valencia · Blogger de moda</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section" id="descargar">
+  <div class="section-inner">
+    <div class="section-tag" style="color:rgba(255,95,75,0.8);">Disponible ahora</div>
+    <h2>Empieza a comprar a tu talla</h2>
+    <p class="sub">Descarga gratis. Sin suscripción para empezar. 3 segundos para tu primer escaneo.</p>
+    <div class="app-badges">
+      <a href="#" class="app-badge">
+        <div class="app-badge-icon">🍎</div>
+        <div class="app-badge-text">
+          <div class="app-badge-sub">Descargar en</div>
+          <div class="app-badge-name">App Store</div>
+        </div>
+      </a>
+      <a href="#" class="app-badge">
+        <div class="app-badge-icon">▶</div>
+        <div class="app-badge-text">
+          <div class="app-badge-sub">Disponible en</div>
+          <div class="app-badge-name">Google Play</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Clothe<span>Scan</span> · 2025</div>
+  <div class="footer-links">
+    <a href="#">Privacidad</a>
+    <a href="#">Términos</a>
+    <a href="#">Contacto</a>
+    <a href="#">Blog</a>
+  </div>
+  <div class="footer-legal">Hecho con ❤️ para el ecommerce del futuro</div>
+</footer>
+
+</body>
+</html>
